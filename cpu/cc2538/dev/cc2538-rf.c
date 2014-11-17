@@ -45,6 +45,7 @@
 #include "net/netstack.h"
 #include "sys/energest.h"
 #include "dev/cc2538-rf.h"
+#include "dev/cctest.h"
 #include "dev/rfcore.h"
 #include "dev/sys-ctrl.h"
 #include "dev/udma.h"
@@ -382,6 +383,55 @@ on(void)
 
     rf_flags |= RX_ACTIVE;
   }
+
+#if 1
+
+/* RF observable control register value to output PA signal */
+#define RFC_OBS_CTRL_PA_PD_INV        0x6A
+
+/* RF observable control register value to output LNA signal */
+#define RFC_OBS_CTRL_LNAMIX_PD_INV    0x68
+
+/* RF observable control register value to output LNA signal
+ *  * for CC2591 compression workaround.
+ */
+#define RFC_OBS_CTRL_DEMOD_CCA        0x0D
+
+/* OBSSELn register value to select RF observable 0 */
+#define OBSSEL_OBS_CTRL0             0x81
+
+/* OBSSELn register value to select RF observable 1 */
+#define OBSSEL_OBS_CTRL1             0x80
+
+
+#define RFC_OBS_CTRL0	REG(RFCORE_XREG_RFC_OBS_CTRL0)
+#define RFC_OBS_CTRL1	REG(RFCORE_XREG_RFC_OBS_CTRL1)
+#define OBSSEL3		REG(CCTEST_OBSSEL3)
+#define OBSSEL2		REG(CCTEST_OBSSEL2)
+
+#define EN_LNA_PIN	(1 << 2)
+#define PAEN_PIN	(1 << 3)
+#define HGM_PIN		(1 << 0)
+
+  GPIO_SET_OUTPUT(GPIO_C_BASE, PAEN_PIN);
+  GPIO_WRITE_PIN(GPIO_C_BASE, PAEN_PIN, 1);
+  GPIO_SET_OUTPUT(GPIO_C_BASE, EN_LNA_PIN);
+  GPIO_WRITE_PIN(GPIO_C_BASE, EN_LNA_PIN, 1);
+
+  // PD0 -> 0/1 -> High/Low Gain
+  GPIO_SET_OUTPUT(GPIO_D_BASE, HGM_PIN);
+  GPIO_WRITE_PIN(GPIO_D_BASE, HGM_PIN, 0);
+
+  // PC3 -> PAEN
+  RFC_OBS_CTRL0 = RFC_OBS_CTRL_PA_PD_INV;
+  OBSSEL3 = OBSSEL_OBS_CTRL0;
+
+  // PC2 -> EN (LNA control)
+  RFC_OBS_CTRL1 = RFC_OBS_CTRL_LNAMIX_PD_INV;
+  OBSSEL2 = OBSSEL_OBS_CTRL1;
+
+#endif
+
 
   ENERGEST_ON(ENERGEST_TYPE_LISTEN);
   return 1;
