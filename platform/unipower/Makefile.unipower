@@ -1,0 +1,19 @@
+# unipower platform makefile
+
+ifndef CONTIKI
+  $(error CONTIKI not defined! You must specify where CONTIKI resides!)
+endif
+
+### Include the files from the base platform (cc2538)
+CONTIKI_TARGET_DIRS =  ../cc2538
+
+### Also include this platform
+CONTIKI_TARGET_DIRS += . dev
+
+#CONTIKI_TARGET_SOURCEFILES += sensors.c smartrf-sensors.c
+#CONTIKI_TARGET_SOURCEFILES += button-sensor.c als-sensor.c
+
+CLEAN += *.unipower
+
+### Include the base CC2538 platform makefile
+include $(CONTIKI)/platform/cc2538/Makefile.cc2538
