@@ -2,9 +2,9 @@
  * \addtogroup cc2538dk
  * @{
  *
- * \defgroup cc2538-smartrf SmartRF06EB Peripherals
+ * \defgroup cc2538-smartrf Unipower Peripherals
  *
- * Defines related to the SmartRF06EB
+ * Defines related to the Unipower
  *
  * This file provides connectivity information on LEDs, Buttons, UART and
  * other SmartRF peripherals
@@ -17,8 +17,8 @@
  * @{
  *
  * \file
- * Header file with definitions related to the I/O connections on the TI
- * SmartRF06EB
+ * Header file with definitions related to the I/O connections on the
+ * Unipower
  *
  * \note   Do not include this file directly. It gets included by contiki-conf
  *         after all relevant directives have been set.
@@ -31,21 +31,30 @@
 /*---------------------------------------------------------------------------*/
 /** \name SmartRF LED configuration
  *
- * LEDs on the SmartRF06 (EB and BB) are connected as follows:
- * - LED1 (Red)    -> PC0
- * - LED2 (Yellow) -> PC1
- * - LED3 (Green)  -> PC2
- * - LED4 (Orange) -> PC3
- *
- * LED1 shares the same pin with the USB pullup
+ * LED on the Unipower are connected as follows:
+ * - LED (Red)    -> PD1
  * @{
  */
+/*---------------------------------------------------------------------------*/
+/* Some files include leds.h before us, so we need to get rid of defaults in
+ * leds.h before we provide correct definitions */
+#undef LEDS_GREEN
+#undef LEDS_YELLOW
+#undef LEDS_RED
+#undef LEDS_CONF_ALL
 
+#define LEDS_RED    2 /**< LED  -> PD1 */
+#define LEDS_YELLOW    LEDS_RED /**In this board there's only one led */
+#define LEDS_GREEN     LEDS_RED /**In this board there's only one led */
+#define LEDS_ORANGE    LEDS_RED /**In this board there's only one led */
+
+/* Notify various examples that we have LEDs */
+#define PLATFORM_HAS_LEDS        1
 /** @} */
 /*---------------------------------------------------------------------------*/
 /** \name USB configuration
  *
- * The USB pullup is driven by PC0 and is shared with LED1
+ * The USB pullup is driven by PC0
  */
 #define USB_PULLUP_PORT          GPIO_C_NUM
 #define USB_PULLUP_PIN           0
@@ -53,7 +62,7 @@
 /*---------------------------------------------------------------------------*/
 /** \name UART configuration
  *
- * On the SmartRF06EB, the UART (XDS back channel) is connected to the
+ * On the Unipower, the UART (XDS back channel) is connected to the
  * following ports/pins
  * - RX:  PA0
  * - TX:  PA1
@@ -77,43 +86,68 @@
 #define UART1_RTS_PIN            3
 /** @} */
 /*---------------------------------------------------------------------------*/
-/** \name SmartRF Button configuration
+/** \name i2c configuration
  *
- * Buttons on the SmartRF06 are connected as follows:
- * - BUTTON_SELECT -> PA3
- * - BUTTON_LEFT -> PC4
- * - BUTTON_RIGHT -> PC5
- * - BUTTON_UP -> PC6
- * - BUTTON_DOWN -> PC7
+ * On the Unipower, the i2c is connected to the
+ * following ports/pins
+ * - SDA:  PC6
+ * - SCL:  PC5
+ *
  * @{
  */
-/** BUTTON_SELECT -> PA3 */
-#define BUTTON_SELECT_PORT       GPIO_A_NUM
-#define BUTTON_SELECT_PIN        3
-#define BUTTON_SELECT_VECTOR     NVIC_INT_GPIO_PORT_A
+#define I2C_SDA_PORT    GPIO_C_NUM
+#define I2C_SDA_PIN     6                
+#define I2C_SCL_PORT    GPIO_C_NUM
+#define I2C_SCL_PIN     5
+/** @} */
+/*---------------------------------------------------------------------------*/
+/** \name Serial Backdoor enable and definition
+ *
+ * On the Unipower, the backdoor pin to flash new fw
+ * is connected on PA6 pin, Active low. To flash new fw
+ * hold the reset button and the backdoor one, then 
+ * release the reset, and after a liltte while
+ * the backdoor
+ *
+ * @{
+ */
+#define FLASH_CCA_CONF_BOOTLDR_BACKDOOR	1 /**<Enable the boot loader backdoor */
+#undef FLASH_CCA_CONF_BOOTLDR_BACKDOOR_PORT_A_PIN
+#define FLASH_CCA_CONF_BOOTLDR_BACKDOOR_PORT_A_PIN 6 /**< Pin PA_6  activates the boot loader */
+#undef FLASH_CCA_CONF_BOOTLDR_BACKDOOR_ACTIVE_HIGH
+#define FLASH_CCA_CONF_BOOTLDR_BACKDOOR_ACTIVE_HIGH 0 /**< A logic low level activates the boot loader */
+/** @} */
+/*---------------------------------------------------------------------------*/
+/** \name Definition of output to control alimentation on J9 and J10 connector
+ *
+ * On the Unipower, we have 4 MOS to control the alimentation aìon pheriperics
+ * connected on J9 and J10. These are the connection:
+ * - MOS1(Vcc-3.3 on J9):  		PD0
+ * - MOS2(Vloc-5-12 on J9):  	PC1
+ * - MOS3(Vcc-3.3 on J10):  	PC2
+ * - MOS4(Vloc-5-12 on J10): 	PC3
+ *
+ * @{
+ */
+#define VCC_J9_EN_BASE GPIO_D_BASE
+#define VCC_J9_EN_PIN_MASK 0x01
+#define VCC_J9_EN_NUM GPIO_D_NUM
+#define VCC_J9_EN_PIN 0
 
-/** BUTTON_LEFT -> PC4 */
-#define BUTTON_LEFT_PORT         GPIO_C_NUM
-#define BUTTON_LEFT_PIN          4
-#define BUTTON_LEFT_VECTOR       NVIC_INT_GPIO_PORT_C
+#define VCC_J10_EN_BASE GPIO_C_BASE
+#define VCC_J10_EN_PIN_MASK 0x04
+#define VCC_J10_EN_NUM GPIO_C_NUM
+#define VCC_J10_EN_PIN 2
 
-/** BUTTON_RIGHT -> PC5 */
-#define BUTTON_RIGHT_PORT        GPIO_C_NUM
-#define BUTTON_RIGHT_PIN         5
-#define BUTTON_RIGHT_VECTOR      NVIC_INT_GPIO_PORT_C
+#define VLOC_J9_EN_BASE GPIO_C_BASE
+#define VLOC_J9_EN_PIN_MASK 0x02
+#define VLOC_J9_EN_NUM GPIO_C_NUM
+#define VLOC_J9_EN_PIN 1
 
-/** BUTTON_UP -> PC6 */
-#define BUTTON_UP_PORT           GPIO_C_NUM
-#define BUTTON_UP_PIN            6
-#define BUTTON_UP_VECTOR         NVIC_INT_GPIO_PORT_C
-
-/** BUTTON_DOWN -> PC7 */
-#define BUTTON_DOWN_PORT         GPIO_C_NUM
-#define BUTTON_DOWN_PIN          7
-#define BUTTON_DOWN_VECTOR       NVIC_INT_GPIO_PORT_C
-
-/* Notify various examples that we have Buttons */
-#define PLATFORM_HAS_BUTTON      1
+#define VLOC_J10_EN_BASE GPIO_C_BASE
+#define VLOC_J10_EN_PIN_MASK 0x08
+#define VLOC_J10_EN_NUM GPIO_C_NUM
+#define VLOC_J10_EN_PIN 3
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
@@ -125,9 +159,7 @@
  * ADC inputs can only be on port A.
  * @{
  */
-#define ADC_ALS_PWR_PORT         GPIO_A_NUM /**< ALS power GPIO control port */
-#define ADC_ALS_PWR_PIN          7 /**< ALS power GPIO control pin */
-#define ADC_ALS_OUT_PIN          6 /**< ALS output ADC input pin on port A */
+ 	//to add if there will be a adc primary input.
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
@@ -148,7 +180,7 @@
  * \name Device string used on startup
  * @{
  */
-#define BOARD_STRING "TI SmartRF06 + cc2538EM"
+#define BOARD_STRING "Unipower board"
 /** @} */
 
 #endif /* BOARD_H_ */
