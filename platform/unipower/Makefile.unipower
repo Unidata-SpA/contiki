@@ -10,8 +10,7 @@ CONTIKI_TARGET_DIRS =  ../cc2538
 ### Also include this platform
 CONTIKI_TARGET_DIRS += . dev
 
-#CONTIKI_TARGET_SOURCEFILES += sensors.c smartrf-sensors.c
-#CONTIKI_TARGET_SOURCEFILES += button-sensor.c als-sensor.c
+CONTIKI_TARGET_SOURCEFILES += power-connector.c
 
 CLEAN += *.unipower
 
