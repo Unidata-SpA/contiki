@@ -30,6 +30,13 @@
  *
  */
 
+ /**
+ * \file
+ *  Architecture-specific definitions for the si7020 sensor unipower board.
+ * \author
+ *  Matteo Di Fraia <difraia.matteo@gmail.com>
+ */
+
 #include <stdlib.h>
 
 #include "contiki.h"
@@ -52,7 +59,6 @@ value(int type)
     /* Temperature reading. */
   case SI7020_SENSOR_TEMP:
     return si7020_temp();;
-
     /* Umidity reading. */
   case SI7020_SENSOR_HUMIDITY:
     return si7020_humidity();
@@ -72,24 +78,24 @@ status(int type)
 }
 
 /*---------------------------------------------------------------------------*/
+/*
+* When you call SENSOR_ACTIVATE(si7020_sensor) Contiki call (sensor).configure(SENSORS_ACTIVE, 1)
+* so the configure function isn't useless.
+* When you call SENSOR_ACTIVATE(si7020_sensor) Contiki call (sensor).configure(SENSORS_ACTIVE, 0)
+*/
 static int
 configure(int type, int c)
 {
   switch(type) {
   case SENSORS_ACTIVE:
     if(c) {
-      /*   TODO: check what happens here */
+      //we want to activate the sensor
       if(!status(SENSORS_ACTIVE)) {
-        rtimer_clock_t t0;
-	si7020_init();
+        si7020_init();
         state = ON;
-
-        /* For for about 11 ms before the SHT11 can be used. */
-        t0 = RTIMER_NOW();
-        while(RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + RTIMER_SECOND / 100));
       }
     } else {
-      si7020_off();
+      //si7020_off(); function not implemented
       state = OFF;
     }
   }

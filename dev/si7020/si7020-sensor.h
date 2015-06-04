@@ -32,8 +32,12 @@
  *
  * Author  : Matteo Di Fraia
  * Created : 2015-06-03
- * Updated : $Date: 2010/01/ $
+ * Updated : $Date: 2010/01/04 $
  *           $Revision: 1 $
+ *
+ *	NOTE: you should add to your platform makefile (platform.makefile):
+ *	MODULES += dev/si7020
+ *
  */
 
 #ifndef SI7020_SENSOR_H_

@@ -1,4 +1,5 @@
 # unipower platform makefile
+#CONTIKI_TARGET_SOURCEFILES += si7020.c
 
 ifndef CONTIKI
   $(error CONTIKI not defined! You must specify where CONTIKI resides!)
@@ -16,3 +17,5 @@ CLEAN += *.unipower
 
 ### Include the base CC2538 platform makefile
 include $(CONTIKI)/platform/cc2538/Makefile.cc2538
+
+MODULES += dev/si7020

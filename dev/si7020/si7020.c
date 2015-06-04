@@ -31,6 +31,12 @@
 /*
  * Device driver for Silicon Labs SI7020, humidity and temperature sensor.
  */
+ /**
+ * \file
+ *  Architecture-specific definitions for the si7020 sensor unipower board.
+ * \author
+ *  Matteo Di Fraia <difraia.matteo@gmail.com>
+ */
 
 #include "contiki.h"
 #include <stdio.h>
@@ -62,74 +68,100 @@
 #define SI7020_READ_TEMP_FROM_PREV_RH_MEAS 0XE0
 #define SI7020_RESET                       0XFE
  
-				/* adr   command  r/w */
-
-/* This can probably be reduced to 250ns according to data sheet. */
-#ifndef delay_400ns
-#define delay_400ns() _NOP()
-#endif
-
 /*---------------------------------------------------------------------------*/
 /*
  * Power up the device. The device can be used after an additional
- * 11ms waiting time.
+ * 80ms waiting time. Default resolution is 14bit for temp and 12 bit for RH
  */
 void
 si7020_init(void)
 {
-  
+  clock_delay_usec(80);
 }
 
 /*---------------------------------------------------------------------------*/
 /*
- * read back value from register
+ * Read temperature from previous RH measurements
  */
-static unsigned int
-rreg(uint8_t reg, uint8_t* data)
-{
-  //read the reg and return I2C_MASTER_ERR_NONE if everything ok
-  i2c_init(SI7020_SDA_PORT, SI7020_SDA_PIN, SI7020_SCL_PORT, SI7020_SCL_PIN, SI7020_BUS_SPEED);
-  i2c_single_send(SI7020_ADDR, reg);             //select the correct register
-  return i2c_single_receive(SI7020_ADDR,  data);
-}
-/*---------------------------------------------------------------------------*/
-/*
- * send command
- */
-static unsigned int
-scmd(uint8_t reg, uint8_t* data)
-{
-  
-}
-/*---------------------------------------------------------------------------*/
-/*
- * Call may take up to 210ms.
- */
-unsigned int
+int
 si7020_temp(void)
 {
+
+  int temp;
+  int ms = 0;
+  int ls = 0;
+  /*  read the reg and return I2C_MASTER_ERR_NONE if everything ok  */
+  i2c_init(SI7020_SDA_PORT, SI7020_SDA_PIN, SI7020_SCL_PORT, SI7020_SCL_PIN, SI7020_BUS_SPEED);
+  /*  Sened command to read previous temp measurements from RH  */
+  i2c_single_send(SI7020_ADDR, SI7020_READ_TEMP_FROM_PREV_RH_MEAS);
+  /*  Prepare to receive data  */            
+  i2c_master_set_slave_address(SI7020_ADDR, I2C_RECEIVE);
+  /*   we are going to receive the  MS byte of reading  */
+  i2c_master_command(I2C_MASTER_CMD_BURST_RECEIVE_START);
+  while(i2c_master_busy());
+  temp = i2c_master_error();
+  if(temp == I2C_MASTER_ERR_NONE) {
+    ms = i2c_master_data_get();
+  }
+  /*   we are going to receive the  LS byte of reading and it's the last  */
+  i2c_master_command(I2C_MASTER_CMD_BURST_RECEIVE_FINISH);
+  while(i2c_master_busy());
+  temp = i2c_master_error();
+  if(temp == I2C_MASTER_ERR_NONE) {
+    ls = i2c_master_data_get();
+  }
+  temp = 0;
+  temp = ((ms << 8) | (ls & 0xFF));
+  /*  convert data to °C as datasheet says  */
+  temp = ((176 * temp)/65536) - 47;
+  return temp;
 }
 /*---------------------------------------------------------------------------*/
 /*
- * Call may take up to 210ms.
+ * Call may take up to 15ms.
  */
 unsigned int
 si7020_humidity(void)
 {
-}
-/*---------------------------------------------------------------------------*/
-#if 1 /* But ok! */
-unsigned
-si7020_sreg(void)
-{
-  
-}
-#endif
-/*---------------------------------------------------------------------------*/
+  int temp;
+  int ms = 0;
+  int ls = 0;
+  i2c_init(SI7020_SDA_PORT, SI7020_SDA_PIN, SI7020_SCL_PORT, SI7020_SCL_PIN, SI7020_BUS_SPEED);
+  /*  send command to perform a reading of Relative humidity, hold master bus  */
+  i2c_single_send(SI7020_ADDR, SI7020_MEAS_RH_HM);      
+  while(i2c_master_busy());
+  i2c_master_set_slave_address(SI7020_ADDR, I2C_RECEIVE);
+  /*   we are going to receive the  MS byte of reading  */
+  i2c_master_command(I2C_MASTER_CMD_BURST_RECEIVE_START);
+  while(i2c_master_busy());
+  temp = i2c_master_error();
+  if(temp == I2C_MASTER_ERR_NONE) {
+    ms = i2c_master_data_get();
+  }
+  /*   we are going to receive the  LS byte of reading and it's the last  */
+  i2c_master_command(I2C_MASTER_CMD_BURST_RECEIVE_FINISH);
+  while(i2c_master_busy());
+  temp = i2c_master_error();
+  if(temp == I2C_MASTER_ERR_NONE) {
+    ls = i2c_master_data_get();
+  }
+  temp = 0;
+  temp = ((ms << 8) | (ls & 0xFF));
+  /*  convert data to %RH as datasheet says  */
+  temp = ((125 * temp)/ 65536) - 6;
+  /*   Round result for error, as datasheet says */
+  if (temp < 0) temp = 0;
+  if (temp > 100) temp = 100;
+  return temp;
 
+}
+/*---------------------------------------------------------------------------*/
+/*
+ * Reset device. Return I2C_MASTER_ERR_NONE if everything ok.
+ */
 int
 si7020_reset(void)
 {
-  
+  return i2c_single_send(SI7020_ADDR, SI7020_RESET);
 }
 /*---------------------------------------------------------------------------*/

@@ -28,16 +28,21 @@
  *
  */
 
+ /**
+ * \file
+ *	Architecture-specific definitions for the si7020 sensor unipower board.
+ * \author
+ * 	Matteo Di Fraia <difraia.matteo@gmail.com>
+ */
+
 #ifndef SI7020_H
 #define SI7020_H
 
 void si7020_init(void);
-void si7020_off(void);
 
-unsigned int si7020_temp(void);
+int si7020_temp(void);
 unsigned int si7020_humidity(void);
-unsigned int si7020_sreg(void);
-int      si7020_set_sreg(unsigned);
+int si7020_reset(void);
 
 /*
  TODO: inserire risoluzione lettura
